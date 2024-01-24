@@ -1037,7 +1037,7 @@ void b2World::RayCast(b2RayCastCallback* callback, const b2Vec2& point1, const b
 
 void b2World::DrawPolygon(const b2Transform& xf, const b2PolygonShape& poly, const b2Color& color)
 {
-    int32 vertexCount = poly.m_vertexCount;
+    int32 vertexCount = poly.m_count;
     b2Assert(vertexCount <= b2_maxPolygonVertices);
     b2Vec2 vertices[b2_maxPolygonVertices];
 
