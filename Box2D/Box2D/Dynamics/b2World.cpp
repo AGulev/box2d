@@ -29,6 +29,7 @@
 #include <Box2D/Collision/Shapes/b2EdgeShape.h>
 #include <Box2D/Collision/Shapes/b2ChainShape.h>
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
+#include <Box2D/Collision/Shapes/b2GridShape.h>
 #include <Box2D/Collision/b2TimeOfImpact.h>
 #include <Box2D/Common/b2Draw.h>
 #include <Box2D/Common/b2Timer.h>
@@ -839,7 +840,7 @@ void b2World::SolveTOI(const b2TimeStep& step)
 					{
 						continue;
 					}
-					
+
 					// Add the other body to the island.
 					other->m_flags |= b2Body::e_islandFlag;
 
@@ -923,7 +924,7 @@ void b2World::Step(float32 dt, int32 velocityIterations, int32 positionIteration
 	step.dtRatio = m_inv_dt0 * dt;
 
 	step.warmStarting = m_warmStarting;
-	
+
 	// Update contacts. This is where some contacts are destroyed.
 	{
 		b2Timer timer;
@@ -966,8 +967,14 @@ void b2World::ClearForces()
 {
 	for (b2Body* body = m_bodyList; body; body = body->GetNext())
 	{
-		body->m_force.SetZero();
-		body->m_torque = 0.0f;
+		// Defold modification: Added IsActive() check; spawned objects are inactive
+		// their first (incomplete) frame, and should retain accumulated forces
+		// until active.
+		if (body->IsActive())
+		{
+			body->m_force.SetZero();
+			body->m_torque = 0.0f;
+		}
 	}
 }
 
@@ -1006,7 +1013,7 @@ struct b2WorldRayCastWrapper
 		{
 			float32 fraction = output.fraction;
 			b2Vec2 point = (1.0f - fraction) * input.p1 + fraction * input.p2;
-			return callback->ReportFixture(fixture, point, output.normal, fraction);
+			return callback->ReportFixture(fixture, index, point, output.normal, fraction);
 		}
 
 		return input.maxFraction;
@@ -1028,6 +1035,20 @@ void b2World::RayCast(b2RayCastCallback* callback, const b2Vec2& point1, const b
 	m_contactManager.m_broadPhase.RayCast(&wrapper, input);
 }
 
+void b2World::DrawPolygon(const b2Transform& xf, const b2PolygonShape& poly, const b2Color& color)
+{
+    int32 vertexCount = poly.m_vertexCount;
+    b2Assert(vertexCount <= b2_maxPolygonVertices);
+    b2Vec2 vertices[b2_maxPolygonVertices];
+
+    for (int32 i = 0; i < vertexCount; ++i)
+    {
+        vertices[i] = b2Mul(xf, poly.m_vertices[i]);
+    }
+
+    m_debugDraw->DrawSolidPolygon(vertices, vertexCount, color);
+}
+
 void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color& color)
 {
 	switch (fixture->GetType())
@@ -1041,6 +1062,7 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
 			b2Vec2 axis = b2Mul(xf.q, b2Vec2(1.0f, 0.0f));
 
 			m_debugDraw->DrawSolidCircle(center, radius, axis, color);
+			m_debugDraw->DrawSegment(center, center + b2Vec2(axis.x * radius, axis.y * radius), b2Color(1.0f - color.r, 1.0f - color.g, 1.0f - color.b));
 		}
 		break;
 
@@ -1070,22 +1092,48 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
 		}
 		break;
 
-	case b2Shape::e_polygon:
-		{
-			b2PolygonShape* poly = (b2PolygonShape*)fixture->GetShape();
-			int32 vertexCount = poly->m_vertexCount;
-			b2Assert(vertexCount <= b2_maxPolygonVertices);
-			b2Vec2 vertices[b2_maxPolygonVertices];
+    case b2Shape::e_polygon:
+        {
+            b2PolygonShape* poly = (b2PolygonShape*)fixture->GetShape();
+            DrawPolygon(xf, *poly, color);
+        }
+        break;
 
-			for (int32 i = 0; i < vertexCount; ++i)
-			{
-				vertices[i] = b2Mul(xf, poly->m_vertices[i]);
-			}
+    case b2Shape::e_grid:
+        {
+            b2GridShape* grid = (b2GridShape*)fixture->GetShape();
+            if (grid->m_enabled)
+            {
+	            uint32 cellCount = grid->GetChildCount();
+	            b2PolygonShape poly;
+	            b2EdgeShape edgeShapes[b2_maxPolygonVertices];
+	            const float32 fillShade = 0.8f;
+	            b2Color fillColor(color.r * fillShade, color.g * fillShade, color.b * fillShade);
+	            for (uint32 i = 0; i < cellCount; ++i)
+	            {
+	                const b2Filter& filter = fixture->GetFilterData(i);
+	                uint32 index = grid->m_cells[i].m_Index;
+	                if (index != B2GRIDSHAPE_EMPTY_CELL && filter.categoryBits != 0)
+	                {
+	                    grid->GetPolygonShapeForCell(i, poly);
+	                    DrawPolygon(xf, poly, fillColor);
+	                    int32 row = i / grid->m_columnCount;
+	                    int32 col = i - (grid->m_columnCount * row);
+	                    uint32 edgeMask = grid->CalculateCellMask(fixture, row, col);
+	                    uint32 edgeCount = grid->GetEdgeShapesForCell(i, edgeShapes, b2_maxPolygonVertices, edgeMask);
+	                    for (uint32 j = 0; j < edgeCount; ++j)
+	                    {
+	                        b2EdgeShape* edge = &edgeShapes[j];
+	                        b2Vec2 v1 = b2Mul(xf, edge->m_vertex1);
+	                        b2Vec2 v2 = b2Mul(xf, edge->m_vertex2);
+	                        m_debugDraw->DrawSegment(v1, v2, color);
+	                    }
+	                }
+	            }
+	        }
+        }
+        break;
 
-			m_debugDraw->DrawSolidPolygon(vertices, vertexCount, color);
-		}
-		break;
-            
     default:
         break;
 	}
@@ -1129,6 +1177,7 @@ void b2World::DrawJoint(b2Joint* joint)
 		m_debugDraw->DrawSegment(x1, p1, color);
 		m_debugDraw->DrawSegment(p1, p2, color);
 		m_debugDraw->DrawSegment(x2, p2, color);
+		break;
 	}
 }
 
@@ -1156,17 +1205,21 @@ void b2World::DrawDebugData()
 				{
 					DrawShape(f, xf, b2Color(0.5f, 0.9f, 0.5f));
 				}
-				else if (b->GetType() == b2_kinematicBody)
-				{
-					DrawShape(f, xf, b2Color(0.5f, 0.5f, 0.9f));
-				}
+				// Defold modification: sleeping kinematics should also be visualized
 				else if (b->IsAwake() == false)
 				{
 					DrawShape(f, xf, b2Color(0.6f, 0.6f, 0.6f));
 				}
 				else
 				{
-					DrawShape(f, xf, b2Color(0.9f, 0.7f, 0.7f));
+                    if (b->GetType() == b2_kinematicBody)
+                    {
+                        DrawShape(f, xf, b2Color(0.5f, 0.5f, 0.9f));
+                    }
+                    else
+                    {
+                        DrawShape(f, xf, b2Color(0.9f, 0.7f, 0.7f));
+                    }
 				}
 			}
 		}
@@ -1185,15 +1238,20 @@ void b2World::DrawDebugData()
 		b2Color color(0.3f, 0.9f, 0.9f);
 		for (b2Contact* c = m_contactManager.m_contactList; c; c = c->GetNext())
 		{
-			//b2Fixture* fixtureA = c->GetFixtureA();
-			//b2Fixture* fixtureB = c->GetFixtureB();
+            if (!c->IsEnabled() || !c->IsTouching())
+            {
+                continue;
+            }
 
-			//b2Vec2 cA = fixtureA->GetAABB().GetCenter();
-			//b2Vec2 cB = fixtureB->GetAABB().GetCenter();
-
-			//m_debugDraw->DrawSegment(cA, cB, color);
-		}
-	}
+            b2WorldManifold world_manifold;
+            c->GetWorldManifold(&world_manifold);
+            int32 pc = c->GetManifold()->pointCount;
+            for (int32 i = 0; i < pc; ++i)
+            {
+                m_debugDraw->DrawArrow(world_manifold.points[i], world_manifold.normal, color);
+            }
+        }
+    }
 
 	if (flags & b2Draw::e_aabbBit)
 	{

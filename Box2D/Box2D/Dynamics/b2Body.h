@@ -153,6 +153,10 @@ public:
 	/// @warning This function is locked during callbacks.
 	void DestroyFixture(b2Fixture* fixture);
 
+	/// DEFOLD
+	/// A way to disable a fixture (i.e. grid shape) and it's contacts
+	void PurgeContacts(b2Fixture* fixture);
+
 	/// Set the position of the body's origin and rotation.
 	/// This breaks any contacts and wakes the other bodies.
 	/// Manipulating a body's transform may cause non-physical behavior.
@@ -190,9 +194,9 @@ public:
 	/// @param omega the new angular velocity in radians/second.
 	void SetAngularVelocity(float32 omega);
 
-	/// Get the angular velocity.
-	/// @return the angular velocity in radians/second.
-	float32 GetAngularVelocity() const;
+    /// Get the angular velocity.
+    /// @return the angular velocity in radians/second.
+    float32 GetAngularVelocity() const;
 
 	/// Apply a force at a world point. If the force is not
 	/// applied at the center of mass, it will generate a torque and
@@ -378,6 +382,15 @@ public:
 	/// Dump this body to a log file
 	void Dump();
 
+    /* The following functions are added by defold */
+
+    /// Get the total force
+    const b2Vec2& GetForce() const;
+
+    void SynchronizeSingle(b2Shape* shape, int32 index);
+
+    void SynchronizeFixtures();
+
 private:
 
 	friend class b2World;
@@ -385,7 +398,7 @@ private:
 	friend class b2ContactManager;
 	friend class b2ContactSolver;
 	friend class b2Contact;
-	
+
 	friend class b2DistanceJoint;
 	friend class b2GearJoint;
 	friend class b2WheelJoint;
@@ -396,6 +409,8 @@ private:
 	friend class b2WeldJoint;
 	friend class b2FrictionJoint;
 	friend class b2RopeJoint;
+
+    friend class b2GridShape;
 
 	// m_flags
 	enum
@@ -412,8 +427,8 @@ private:
 	b2Body(const b2BodyDef* bd, b2World* world);
 	~b2Body();
 
-	void SynchronizeFixtures();
-	void SynchronizeTransform();
+    // Defold mod
+    void SynchronizeTransform();
 
 	// This is used to prevent connected bodies from colliding.
 	// It may lie, depending on the collideConnected flag.
@@ -739,7 +754,7 @@ inline void b2Body::SetUserData(void* data)
 
 inline void* b2Body::GetUserData() const
 {
-	return m_userData;
+    return m_userData;
 }
 
 inline void b2Body::ApplyForce(const b2Vec2& force, const b2Vec2& point)
@@ -841,6 +856,13 @@ inline b2World* b2Body::GetWorld()
 inline const b2World* b2Body::GetWorld() const
 {
 	return m_world;
+}
+
+/* Defold additions */
+
+inline const b2Vec2& b2Body::GetForce() const
+{
+    return m_force;
 }
 
 #endif

@@ -114,7 +114,7 @@ void b2ContactManager::Collide()
 		int32 indexB = c->GetChildIndexB();
 		b2Body* bodyA = fixtureA->GetBody();
 		b2Body* bodyB = fixtureB->GetBody();
-		 
+
 		// Is this contact flagged for filtering?
 		if (c->m_flags & b2Contact::e_filterFlag)
 		{
@@ -128,7 +128,7 @@ void b2ContactManager::Collide()
 			}
 
 			// Check user filtering.
-			if (m_contactFilter && m_contactFilter->ShouldCollide(fixtureA, fixtureB) == false)
+			if (m_contactFilter && m_contactFilter->ShouldCollide(fixtureA, indexA, fixtureB, indexB) == false)
 			{
 				b2Contact* cNuke = c;
 				c = cNuke->GetNext();
@@ -140,10 +140,10 @@ void b2ContactManager::Collide()
 			c->m_flags &= ~b2Contact::e_filterFlag;
 		}
 
-		bool activeA = bodyA->IsAwake() && bodyA->m_type != b2_staticBody;
-		bool activeB = bodyB->IsAwake() && bodyB->m_type != b2_staticBody;
+		bool activeA = (bodyA->IsAwake() || bodyA->GetType() == b2_kinematicBody) && bodyA->m_type != b2_staticBody;
+		bool activeB = (bodyB->IsAwake() || bodyB->GetType() == b2_kinematicBody) && bodyB->m_type != b2_staticBody;
 
-		// At least one body must be awake and it must be dynamic or kinematic.
+		// Defold Mod: At least one body must be awake and it must be dynamic or kinematic
 		if (activeA == false && activeB == false)
 		{
 			c = c->GetNext();
@@ -172,6 +172,19 @@ void b2ContactManager::Collide()
 void b2ContactManager::FindNewContacts()
 {
 	m_broadPhase.UpdatePairs(this);
+}
+
+// Defold modifications
+// Early out filter (broad-phase)
+// See API-changes for more info
+bool b2ContactManager::CanCollide(void* proxyUserDataA, void* proxyUserDataB)
+{
+    b2FixtureProxy* proxyA = (b2FixtureProxy*)proxyUserDataA;
+    b2FixtureProxy* proxyB = (b2FixtureProxy*)proxyUserDataB;
+
+    b2Fixture* fixtureA = proxyA->fixture;
+    b2Fixture* fixtureB = proxyB->fixture;
+    return !(fixtureA == fixtureB && fixtureA->GetType() == b2Shape::e_grid);
 }
 
 void b2ContactManager::AddPair(void* proxyUserDataA, void* proxyUserDataB)
@@ -224,13 +237,14 @@ void b2ContactManager::AddPair(void* proxyUserDataA, void* proxyUserDataB)
 	}
 
 	// Does a joint override collision? Is at least one body dynamic?
+	// Defold modification: Is at least one body dynamic or kinematic. We disable contacts with no dynamic body after creation below.
 	if (bodyB->ShouldCollide(bodyA) == false)
 	{
 		return;
 	}
 
 	// Check user filtering.
-	if (m_contactFilter && m_contactFilter->ShouldCollide(fixtureA, fixtureB) == false)
+	if (m_contactFilter && m_contactFilter->ShouldCollide(fixtureA, indexA, fixtureB, indexB) == false)
 	{
 		return;
 	}

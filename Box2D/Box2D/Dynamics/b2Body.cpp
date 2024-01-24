@@ -144,7 +144,7 @@ void b2Body::SetType(b2BodyType type)
 	// Since the body type changed, we need to flag contacts for filtering.
 	for (b2Fixture* f = m_fixtureList; f; f = f->m_next)
 	{
-		f->Refilter();
+		f->Refilter(true);
 	}
 }
 
@@ -263,6 +263,28 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 	ResetMassData();
 }
 
+// DEFOLD
+void b2Body::PurgeContacts(b2Fixture* fixture)
+{
+	// Destroy any contacts associated with the fixture.
+	b2ContactEdge* edge = m_contactList;
+	while (edge)
+	{
+		b2Contact* c = edge->contact;
+		edge = edge->next;
+
+		b2Fixture* fixtureA = c->GetFixtureA();
+		b2Fixture* fixtureB = c->GetFixtureB();
+
+		if (fixture == fixtureA || fixture == fixtureB)
+		{
+			// This destroys the contact and removes it from
+			// this body's contact list.
+			m_world->m_contactManager.Destroy(c);
+		}
+	}
+}
+
 void b2Body::ResetMassData()
 {
 	// Compute mass data from shapes. Each shape has its own density.
@@ -379,10 +401,12 @@ void b2Body::SetMassData(const b2MassData* massData)
 bool b2Body::ShouldCollide(const b2Body* other) const
 {
 	// At least one body should be dynamic.
-	if (m_type != b2_dynamicBody && other->m_type != b2_dynamicBody)
-	{
-		return false;
-	}
+    // Defold mod: At least one body should be dynamic or kinematic
+    if (m_type != b2_dynamicBody && other->m_type != b2_dynamicBody
+            && m_type != b2_kinematicBody && other->m_type != b2_kinematicBody)
+    {
+        return false;
+    }
 
 	// Does a joint prevent collision?
 	for (b2JointEdge* jn = m_jointList; jn; jn = jn->next)
@@ -436,6 +460,30 @@ void b2Body::SynchronizeFixtures()
 	{
 		f->Synchronize(broadPhase, xf1, m_xf);
 	}
+}
+
+void b2Body::SynchronizeSingle(b2Shape* shape, int32 index)
+{
+    // Defold fix: Shapes call this function blindly not knowing if proxies have been created or not.
+    // b2Body only has proxied created when active, so discard calls when not active so shapes can be
+    // updated without crash on inactive objects.
+    if (!IsActive())
+    {
+        return;
+    }
+
+    b2Transform xf1;
+    xf1.q.Set(m_sweep.a0);
+    xf1.p = m_sweep.c0 - b2Mul(xf1.q, m_sweep.localCenter);
+
+    b2BroadPhase* broadPhase = &m_world->m_contactManager.m_broadPhase;
+    for (b2Fixture* f = m_fixtureList; f; f = f->m_next)
+    {
+        if (f->GetShape() == shape)
+        {
+            f->SynchronizeSingle(broadPhase, index, xf1, m_xf);
+        }
+    }
 }
 
 void b2Body::SetActive(bool flag)
