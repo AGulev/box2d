@@ -28,21 +28,25 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -86,9 +90,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <ProgramDataBaseFileName>$(OutDir)Box2D.pdb</ProgramDataBaseFileName>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -173,8 +178,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>
-      </DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>false</ExceptionHandling>
       <FloatingPointModel>Fast</FloatingPointModel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
@@ -233,6 +237,7 @@
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2FrictionJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2GearJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2Joint.h" />
+    <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2MotorJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2MouseJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2PrismaticJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2PulleyJoint.h" />
@@ -240,7 +245,6 @@
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2RopeJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2WeldJoint.h" />
     <ClInclude Include="..\..\Box2D\Dynamics\Joints\b2WheelJoint.h" />
-    <ClInclude Include="..\..\Box2D\Rope\b2Rope.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Box2D\Collision\b2BroadPhase.cpp">
@@ -317,6 +321,7 @@
     </ClCompile>
     <ClCompile Include="..\..\Box2D\Dynamics\Joints\b2Joint.cpp">
     </ClCompile>
+    <ClCompile Include="..\..\Box2D\Dynamics\Joints\b2MotorJoint.cpp" />
     <ClCompile Include="..\..\Box2D\Dynamics\Joints\b2MouseJoint.cpp">
     </ClCompile>
     <ClCompile Include="..\..\Box2D\Dynamics\Joints\b2PrismaticJoint.cpp">
@@ -330,8 +335,6 @@
     <ClCompile Include="..\..\Box2D\Dynamics\Joints\b2WeldJoint.cpp">
     </ClCompile>
     <ClCompile Include="..\..\Box2D\Dynamics\Joints\b2WheelJoint.cpp">
-    </ClCompile>
-    <ClCompile Include="..\..\Box2D\Rope\b2Rope.cpp">
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

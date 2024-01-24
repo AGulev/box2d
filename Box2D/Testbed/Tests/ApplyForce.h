@@ -92,8 +92,8 @@ public:
 
 			b2BodyDef bd;
 			bd.type = b2_dynamicBody;
-			bd.angularDamping = 5.0f;
-			bd.linearDamping = 0.1f;
+			bd.angularDamping = 2.0f;
+			bd.linearDamping = 0.5f;
 
 			bd.position.Set(0.0f, 2.0);
 			bd.angle = b2_pi;
@@ -151,19 +151,19 @@ public:
 			{
 				b2Vec2 f = m_body->GetWorldVector(b2Vec2(0.0f, -200.0f));
 				b2Vec2 p = m_body->GetWorldPoint(b2Vec2(0.0f, 2.0f));
-				m_body->ApplyForce(f, p);
+				m_body->ApplyForce(f, p, true);
 			}
 			break;
 
 		case 'a':
 			{
-				m_body->ApplyTorque(50.0f);
+				m_body->ApplyTorque(50.0f, true);
 			}
 			break;
 
 		case 'd':
 			{
-				m_body->ApplyTorque(-50.0f);
+				m_body->ApplyTorque(-50.0f, true);
 			}
 			break;
 		}

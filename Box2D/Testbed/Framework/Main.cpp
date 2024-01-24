@@ -20,8 +20,7 @@
 #include "Test.h"
 #include "glui/glui.h"
 
-#include <cstdio>
-using namespace std;
+#include <stdio.h>
 
 namespace
 {
@@ -98,7 +97,6 @@ static void SimulationLoop()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	test->SetTextLine(30);
 	b2Vec2 oldCenter = settings.viewCenter;
 	settings.hz = settingsHz;
 	test->Step(&settings);
@@ -107,7 +105,7 @@ static void SimulationLoop()
 		Resize(width, height);
 	}
 
-	test->DrawTitle(5, 15, entry->name);
+	test->DrawTitle(entry->name);
 
 	glutSwapBuffers();
 
@@ -201,31 +199,64 @@ static void KeyboardSpecial(int key, int x, int y)
 	B2_NOT_USED(x);
 	B2_NOT_USED(y);
 
+	int mod = glutGetModifiers();
+
 	switch (key)
 	{
-	case GLUT_ACTIVE_SHIFT:
 		// Press left to pan left.
 	case GLUT_KEY_LEFT:
-		settings.viewCenter.x -= 0.5f;
-		Resize(width, height);
+		if (mod == GLUT_ACTIVE_CTRL)
+		{
+			b2Vec2 newOrigin(2.0f, 0.0f);
+			test->ShiftOrigin(newOrigin);
+		}
+		else
+		{
+			settings.viewCenter.x -= 0.5f;
+			Resize(width, height);
+		}
 		break;
 
 		// Press right to pan right.
 	case GLUT_KEY_RIGHT:
-		settings.viewCenter.x += 0.5f;
-		Resize(width, height);
+		if (mod == GLUT_ACTIVE_CTRL)
+		{
+			b2Vec2 newOrigin(-2.0f, 0.0f);
+			test->ShiftOrigin(newOrigin);
+		}
+		else
+		{
+			settings.viewCenter.x += 0.5f;
+			Resize(width, height);
+		}
 		break;
 
 		// Press down to pan down.
 	case GLUT_KEY_DOWN:
-		settings.viewCenter.y -= 0.5f;
-		Resize(width, height);
+		if (mod == GLUT_ACTIVE_CTRL)
+		{
+			b2Vec2 newOrigin(0.0f, 2.0f);
+			test->ShiftOrigin(newOrigin);
+		}
+		else
+		{
+			settings.viewCenter.y -= 0.5f;
+			Resize(width, height);
+		}
 		break;
 
 		// Press up to pan up.
 	case GLUT_KEY_UP:
-		settings.viewCenter.y += 0.5f;
-		Resize(width, height);
+		if (mod == GLUT_ACTIVE_CTRL)
+		{
+			b2Vec2 newOrigin(0.0f, -2.0f);
+			test->ShiftOrigin(newOrigin);
+		}
+		else
+		{
+			settings.viewCenter.y += 0.5f;
+			Resize(width, height);
+		}
 		break;
 
 		// Press home to reset the view.
@@ -303,6 +334,7 @@ static void MouseMotion(int32 x, int32 y)
 	}
 }
 
+#ifdef FREEGLUT
 static void MouseWheel(int wheel, int direction, int x, int y)
 {
 	B2_NOT_USED(wheel);
@@ -318,6 +350,7 @@ static void MouseWheel(int wheel, int direction, int x, int y)
 	}
 	Resize(width, height);
 }
+#endif
 
 static void Restart(int)
 {
@@ -403,6 +436,7 @@ int main(int argc, char** argv)
 
 	hertzSpinner->set_float_limits(5.0f, 200.0f);
 
+	glui->add_checkbox("Sleep", &settings.enableSleep);
 	glui->add_checkbox("Warm Starting", &settings.enableWarmStarting);
 	glui->add_checkbox("Time of Impact", &settings.enableContinuous);
 	glui->add_checkbox("Sub-Stepping", &settings.enableSubStepping);
@@ -413,11 +447,10 @@ int main(int argc, char** argv)
 	glui->add_checkbox_to_panel(drawPanel, "Shapes", &settings.drawShapes);
 	glui->add_checkbox_to_panel(drawPanel, "Joints", &settings.drawJoints);
 	glui->add_checkbox_to_panel(drawPanel, "AABBs", &settings.drawAABBs);
-	glui->add_checkbox_to_panel(drawPanel, "Pairs", &settings.drawPairs);
 	glui->add_checkbox_to_panel(drawPanel, "Contact Points", &settings.drawContactPoints);
 	glui->add_checkbox_to_panel(drawPanel, "Contact Normals", &settings.drawContactNormals);
-	glui->add_checkbox_to_panel(drawPanel, "Contact Forces", &settings.drawContactForces);
-	glui->add_checkbox_to_panel(drawPanel, "Friction Forces", &settings.drawFrictionForces);
+	glui->add_checkbox_to_panel(drawPanel, "Contact Impulses", &settings.drawContactImpulse);
+	glui->add_checkbox_to_panel(drawPanel, "Friction Impulses", &settings.drawFrictionImpulse);
 	glui->add_checkbox_to_panel(drawPanel, "Center of Masses", &settings.drawCOMs);
 	glui->add_checkbox_to_panel(drawPanel, "Statistics", &settings.drawStats);
 	glui->add_checkbox_to_panel(drawPanel, "Profile", &settings.drawProfile);

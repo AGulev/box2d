@@ -150,12 +150,12 @@ public:
 			b2Vec2 p = b->GetPosition();
 			if (p.x <= -10.0f || 10.0f <= p.x || p.y <= 0.0f || 20.0f <= p.y)
 			{
-				p.x += 0.0;
+				p.x += 0.0f;
 			}
 		}
 
 		m_debugDraw.DrawString(5, m_textLine, "Press 'c' to create a circle.");
-		m_textLine += 15;
+		m_textLine += DRAW_STRING_NEW_LINE;
 	}
 
 	static Test* Create()

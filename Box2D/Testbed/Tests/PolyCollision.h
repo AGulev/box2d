@@ -53,22 +53,22 @@ public:
 		worldManifold.Initialize(&manifold, m_transformA, m_polygonA.m_radius, m_transformB, m_polygonB.m_radius);
 
 		m_debugDraw.DrawString(5, m_textLine, "point count = %d", manifold.pointCount);
-		m_textLine += 15;
+		m_textLine += DRAW_STRING_NEW_LINE;
 
 		{
 			b2Color color(0.9f, 0.9f, 0.9f);
 			b2Vec2 v[b2_maxPolygonVertices];
-			for (int32 i = 0; i < m_polygonA.m_vertexCount; ++i)
+			for (int32 i = 0; i < m_polygonA.m_count; ++i)
 			{
 				v[i] = b2Mul(m_transformA, m_polygonA.m_vertices[i]);
 			}
-			m_debugDraw.DrawPolygon(v, m_polygonA.m_vertexCount, color);
+			m_debugDraw.DrawPolygon(v, m_polygonA.m_count, color);
 
-			for (int32 i = 0; i < m_polygonB.m_vertexCount; ++i)
+			for (int32 i = 0; i < m_polygonB.m_count; ++i)
 			{
 				v[i] = b2Mul(m_transformB, m_polygonB.m_vertices[i]);
 			}
-			m_debugDraw.DrawPolygon(v, m_polygonB.m_vertexCount, color);
+			m_debugDraw.DrawPolygon(v, m_polygonB.m_count, color);
 		}
 
 		for (int32 i = 0; i < manifold.pointCount; ++i)

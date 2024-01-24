@@ -111,9 +111,6 @@
     <ClInclude Include="..\..\Testbed\Tests\Revolute.h">
       <Filter>Tests</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Testbed\Tests\Rope.h">
-      <Filter>Tests</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\Testbed\Tests\RopeJoint.h">
       <Filter>Tests</Filter>
     </ClInclude>
@@ -151,6 +148,21 @@
       <Filter>Tests</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Testbed\Tests\Tumbler.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Testbed\Tests\ConveyorBelt.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Testbed\Tests\Mobile.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Testbed\Tests\MobileBalanced.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Testbed\Tests\MotorJoint.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Testbed\Tests\ConvexHull.h">
       <Filter>Tests</Filter>
     </ClInclude>
   </ItemGroup>

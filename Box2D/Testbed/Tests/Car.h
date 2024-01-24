@@ -104,7 +104,7 @@ public:
 			jd.enableLimit = true;
 			m_world->CreateJoint(&jd);
 
-			body->ApplyAngularImpulse(100.0f);
+			body->ApplyAngularImpulse(100.0f, true);
 		}
 
 		// Bridge
@@ -259,9 +259,9 @@ public:
 	void Step(Settings* settings)
 	{
 		m_debugDraw.DrawString(5, m_textLine, "Keys: left = a, brake = s, right = d, hz down = q, hz up = e");
-		m_textLine += 15;
+		m_textLine += DRAW_STRING_NEW_LINE;
 		m_debugDraw.DrawString(5, m_textLine, "frequency = %g hz, damping ratio = %g", m_hz, m_zeta);
-		m_textLine += 15;
+		m_textLine += DRAW_STRING_NEW_LINE;
 
 		settings->viewCenter.x = m_car->GetPosition().x;
 		Test::Step(settings);
